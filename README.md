@@ -23,6 +23,9 @@ Copy `initrd.img-4.9.0-13-4kc-malta` from the installed VM /boot directory to th
 
 `C-a h` key combination is useful to interacting with QEMU in `-nographic` mode.
 
+#### How to check if its big or little endian
+`lscpu | grep Endian` for more recent debians
+
 ``
 ##### Boot:
 
