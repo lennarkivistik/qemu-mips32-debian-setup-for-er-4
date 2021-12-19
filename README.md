@@ -1,53 +1,96 @@
-# qemu-mips32-debian-setup-for-er-4
-Qemu build for compiling for the Ubiquiti Edgerouter 4 MIPS64 big endian
+
+### Overview - Compiling & running latest version of pixelserv-tls under Debian MIPS64 - Big Endian
+How to build from source for the Edgerouter 4 - ER-4 (Debian MIPS64 - Big Endian)
 
 
+#### How to check if your system/router is big or little endian
+* `lscpu | grep Endian`  ~ for more recent debians
+* `echo -n I | od -to2 | head -n1 | cut -f2 -d" " | cut -c6 ` ~ for older systems, Big Endian will output zero and little endian will output 1
 
-#### Get Debian for MIPS
-* http://ftp.debian.org/debian/dists/stretch/main/installer-mips/current/images/malta/netboot/
-* Download both files.
 
+Install Debian 9.0 "Stretch" on QEMU MIPS32 in a Debian VM.
 
-##### Install
-
+#### Step 1: Install QEMU
 ```
-qemu-img create -f qcow2 hda.img 32G
-
-qemu-system-mips -M malta -m 256 -hda hda.img -kernel vmlinux-4.9.0-13-4kc-malta \
-    -initrd initrd.gz -append "console=ttyS0 nokaslr" -nographic
-    
-# Once you have installed the debian image close down qemu and mount the hda.img with libguestfs-tools
-guestmount --add hda.img --mount /dev/sda1 /tmp/dos
-Copy `initrd.img-4.9.0-13-4kc-malta` from the installed VM /boot directory to the host machine.
+sudo apt install qemu-system-mips
 ```
 
-`C-a h` key combination is useful to interacting with QEMU in `-nographic` mode.
+#### Step 2: Download Linux kernel and installation image
+```
+* Download both files from http://ftp.debian.org/debian/dists/stretch/main/installer-mips/current/images/malta/netboot/
+wget http://ftp.debian.org/debian/dists/stretch/main/installer-mips/current/images/malta/netboot/vmlinux-4.9.0-13-4kc-malta
+wget http://ftp.debian.org/debian/dists/stretch/main/installer-mips/current/images/malta/netboot/initrd.gz
+```
 
-#### How to check if its big or little endian
-`lscpu | grep Endian` for more recent debians
+#### Step 3: Create a new hard disk
+```
+qemu-img create -f qcow2 hda.qcow 8G
+```
 
-``
-##### Boot:
+#### Step 4: Install Debian Stretch
+```
+qemu-system-mips \
+    -M      malta \
+    -m      256 \
+    -hda    hda.img \
+    -kernel vmlinux-4.9.0-13-4kc-malta \
+    -initrd initrd.gz \
+    -append "console=ttyS0 nokaslr" \
+    -nographic
+```
+Proceed with the installation to complete, once at the end click `C-a x` to exit the qemu-emulator, use `C-a h` to see all the possible commands for qemu emulator.
+
+#### Step 5: Extract starting image from disk
+During installation process, the installer has created a initrd.img that contains all the needed drivers for booting the system. We need to extract this file from the disk. Utility qemu-nbd helps to mount the QEMU disk image.
+```
+apt-get install qemu-utils
+modprobe nbd max_part=8
+qemu-nbd --connect=/dev/nbd0 hda.qcow 
+mount /dev/nbd0p1 /mnt
+cp /mnt/boot/initrd.img-4.9.0-8-5kc-malta .
+umount /mnt
+
+* alternative way
+apt-get install libguestfs-tools
+guestmount --add hda.img --mount /dev/sda1 /mnt
+cp /mnt/boot/initrd.img-4.9.0-13-4kc-malta .
+umount /mnt
 
 ```
-qemu-system-mips -M malta -m 256 -hda hda.img -kernel vmlinux-4.9.0-13-4kc-malta \
+
+#### Step 6: Boot from disk
+```
+qemu-system-mips \
+    -M      malta \
+    -m      256 \
+    -hda    hda.img \
+    -kernel vmlinux-4.9.0-13-4kc-malta \
     -initrd initrd.img-4.9.0-13-4kc-malta \
-    -append "root=/dev/sda1 console=ttyS0 nokaslr" -nographic \
+    -append "root=/dev/sda1 console=ttyS0 nokaslr" \
     -net nic,macaddr=52:54:00:fa:ce:07,model=virtio \
-    -net user,hostfwd=tcp:127.0.0.1:2022-:22
+    -net user,hostfwd=tcp:127.0.0.1:2022-:22 \
+    -nographic
+ 
 ```
 
+#### Step 7: Install Build Dependencies
 ```
-apt-get install build-essential git autoconf libssl-dev libtool bison flex libapt-pkg-dev libboost-dev libperl-dev libboost-filesystem-dev libboost-system-dev libboost-thread-dev libpcre3-dev
+apt-get install git easy-rsa autoconf build-base openssl automake linux-headers openssl-dev -y
+```
+
+#### Step 8: Build
+```
 git clone https://github.com/kvic-z/pixelserv-tls.git
 cd pixelserv-tls
 autoreconf -i
 ./configure
 make install
-
 ```
 
-#### Notes
+#### Sidenotes - building something else...
+```
+apt-get install build-essential git autoconf libssl-dev libtool bison flex libapt-pkg-dev libboost-dev libperl-dev libboost-filesystem-dev libboost-system-dev libboost-thread-dev libpcre3-dev
+```
 
 #### References
 
