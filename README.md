@@ -43,19 +43,10 @@ Proceed with the installation to complete, once at the end click `C-a x` to exit
 #### Step 5: Extract starting image from disk
 During installation process, the installer has created a initrd.img that contains all the needed drivers for booting the system. We need to extract this file from the disk. Utility qemu-nbd helps to mount the QEMU disk image.
 ```
-apt-get install qemu-utils
-modprobe nbd max_part=8
-qemu-nbd --connect=/dev/nbd0 hda.qcow 
-mount /dev/nbd0p1 /mnt
-cp /mnt/boot/initrd.img-4.9.0-8-5kc-malta .
-umount /mnt
-
-* alternative way
 apt-get install libguestfs-tools
 guestmount --add hda.img --mount /dev/sda1 /mnt
 cp /mnt/boot/initrd.img-4.9.0-13-4kc-malta .
 umount /mnt
-
 ```
 
 #### Step 6: Boot from disk
