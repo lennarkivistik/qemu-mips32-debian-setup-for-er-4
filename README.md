@@ -105,3 +105,5 @@ apt-get install build-essential git autoconf libssl-dev libtool bison flex libap
 * https://markuta.com/how-to-build-a-mips-qemu-image-on-debian/
 
 * https://www.nicksherlock.com/2017/08/emulating-mips-guests-in-proxmox/
+
+* https://gist.github.com/sergev/1cb8abf6d64c63378cca1bed00bdd4d2
